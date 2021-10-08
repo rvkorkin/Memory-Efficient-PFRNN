@@ -12,6 +12,8 @@ import numpy as np
 from ModelParams import ModelParams
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+np.random.seed(ModelParams().random_seed)
+torch.random.manual_seed(ModelParams().random_seed)
 
 def conv(in_channels, out_channels, kernel_size=3, stride=1, dropout=0.0):
     return nn.Sequential(
@@ -41,11 +43,10 @@ class MainModel(nn.Module):
         self.elbo_weight = params.elbo_weight
         self.dropout_rate = 0.5
         '''
-        self.rnn = PFLSTM(self.pNumber, self.total_emb,
+        self.rnn = PFLSTM(self.pNumber, self.total_emb,1000
                 self.hidden_dim, 32, 32, 0.5)
         '''
-        self.rnn = PFGRU(self.pNumber, self.total_emb, self.hidden_dim,
-                32, 32, 0.5)
+        self.rnn = PFGRU(self.pNumber, self.total_emb, self.hidden_dim, 32, 32, 0.5)
 
         self.hidden2label = nn.Linear(self.hidden_dim, 3)
 

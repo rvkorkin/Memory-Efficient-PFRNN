@@ -9,9 +9,9 @@ class ModelParams(object):
         self.speed = 0.2
         self.theta_noise = 0.01
         self.speed_noise = 0.02
-        self.sensor_noise = 0.5
-        self.pNumber = 32
-        self.hidden_dim = 32
+        self.sensor_noise = 0.1
+        self.pNumber = 30
+        self.hidden_dim = 64
         self.map_size = 10
         self.map_emb = 64
         self.measurement_emb = 32
@@ -23,4 +23,5 @@ class ModelParams(object):
         self.l1_weight = 0
         self.l2_weight = 1
         self.elbo_weight = 1
-        self.batch_size = 16
+        self.batch_size = 32
+        self.random_seed = 5

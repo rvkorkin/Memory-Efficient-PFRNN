@@ -8,7 +8,11 @@ Created on Tue Aug 24 16:39:31 2021
 import torch
 from torch import nn
 import numpy as np
+from ModelParams import ModelParams
+
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+np.random.seed(ModelParams().random_seed)
+torch.random.manual_seed(ModelParams().random_seed)
 
 class BaseModel(nn.Module):
 
@@ -105,16 +109,14 @@ class PFLSTM(BaseModel):
         s = wh_b + wi
         f, i, o, mu, var = torch.split(s, split_size_or_sections=self.h_dim, dim=1)
         g_ = self.reparameterize(mu, var).view(self.pNumber, -1, self.h_dim).transpose(0, 1).contiguous()
-        g = self.batch_norm(g_).transpose(
-            0, 1).contiguous().view(-1, self.h_dim)
+        g = self.batch_norm(g_).transpose(0, 1).contiguous().view(-1, self.h_dim)
         c1 = torch.sigmoid(f) * c0 + torch.sigmoid(i) * nn.functional.leaky_relu(g)
         h1 = torch.sigmoid(o) * torch.tanh(c1)
 
         att = torch.cat((measurement, h1), dim=1)
         logpdf_measurement = self.fc_measurement(att)
 
-        p1 = logpdf_measurement.view(self.pNumber, -1, 1) + \
-            p0.view(self.pNumber, -1, 1)
+        p1 = logpdf_measurement.view(self.pNumber, -1, 1) + p0.view(self.pNumber, -1, 1)
 
         p1 = p1 - torch.logsumexp(p1, dim=0, keepdim=True)
         (h1, c1), p1 = self.resampling((h1, c1), p1)

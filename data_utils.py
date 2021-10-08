@@ -8,7 +8,9 @@ Created on Tue Aug 24 16:44:44 2021
 import random
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from ModelParams import ModelParams
+np.random.seed(0)
 
 class Robot():
     def __init__(self, world_data):
@@ -22,9 +24,8 @@ class Robot():
         self.width = self.world_data.shape[1]
         self.blocks = []
         self.sensors = []
-        self.direction = random.uniform(-1, 1)
+        self.direction = np.random.normal(2 * np.pi)
         self.x, self.y = self.random_place()
-        self.old_x, self.old_y = self.x, self.y
         for y, line in enumerate(self.world_data):
             for x, block in enumerate(line):
                 if block:
@@ -45,7 +46,7 @@ class Robot():
 
     def random_place(self):
         while True:
-            x, y = random.uniform(0, self.width), random.uniform(0, self.height)
+            x, y = np.random.uniform(0, self.width), np.random.uniform(0, self.height)
             if self.free(x, y):
                 return x, y
 
@@ -61,23 +62,23 @@ class Robot():
 
     def read_sensor(self, measurement_num):
         measurement = self.distance_to_sensors(self.x, self.y, measurement_num)
-        return [x + np.random.normal(scale=self.sensor_noise) for x in measurement]
+        return [x + self.sensor_noise * np.random.uniform(-1, 1) for x in measurement]
 
     def move(self):
         while True:
             direction = self.direction
             speed = self.speed
-            speed += self.speed_noise * np.random.normal(1)
-            direction += self.theta_noise * np.random.normal(1)
+            speed += self.speed_noise * np.random.uniform(-1, 1)
+            direction += self.theta_noise * np.random.normal(2 * np.pi)
             dx = np.sin(direction) * speed
             dy = np.cos(direction) * speed
             if self.free(self.x + dx, self.y + dy):
                 self.x += dx
                 self.y += dy
                 break
-            self.direction = np.random.normal(1)
+            self.direction = np.random.normal(2 * np.pi)
 
-def gen_track(track_len=40, measurement_num=5):
+def gen_track(track_len=100, measurement_num=5):
     world_data = np.loadtxt('environment.csv', delimiter=',')
     robot = Robot(world_data)
     track_ret = []
@@ -95,23 +96,22 @@ def gen_track(track_len=40, measurement_num=5):
         motion_data = [d_x, d_y, d_d]
         step_data = step_data + motion_data + sensor_data
         track_ret.append(step_data)
-
     return np.array(track_ret), world_data
 
-def gen_data(num_tracks=100, track_len=40, measurement_num=5):
-    data = {'tracks': []}
+def gen_data(num_tracks=10000, track_len=100, measurement_num=5):
+    data_tracks = {'tracks': []}
 
-    from tqdm import tqdm
     for _ in tqdm(range(num_tracks)):
         track_data, world_data = gen_track(track_len, measurement_num)
-        data['tracks'].append(track_data)
+        data_tracks['tracks'].append(track_data)
 
-    data['map'] = np.array(world_data)
-    tracks = np.array(data['tracks'])
+    data_tracks['map'] = np.array(world_data)
+    tracks = np.array(data_tracks['tracks'])
     Matr = np.zeros((0, tracks[0].shape[1]))
     for i in range(num_tracks):
         Matr = np.vstack((Matr, tracks[i]))
     np.savetxt('trajectories.csv', Matr, delimiter=",")
-    np.savetxt('environment.csv', np.array(data['map']).astype(int), delimiter=",")
-    data['tracks'] = np.array(data['tracks'])
-    return data
+    np.savetxt('environment.csv', np.array(data_tracks['map']).astype(int), delimiter=",")
+    data_tracks['tracks'] = np.array(data_tracks['tracks'])
+    return data_tracks
+
