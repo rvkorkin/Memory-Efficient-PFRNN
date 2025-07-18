@@ -108,7 +108,7 @@ def gen_track(track_len=100, measurement_num=5):
         track_ret.append(step_data)
     return np.array(track_ret), world_data
 
-def gen_data(num_tracks=50000, track_len=50, measurement_num=5):
+def gen_data(num_tracks=20000, track_len=50, measurement_num=5):
     data_tracks = {'tracks': []}
 
     for _ in tqdm(range(num_tracks)):
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         plt.legend(loc='lower left', fontsize=18)
         plt.tick_params(axis='both', which='major', labelsize=18)
     plt.close('all')
-    data_tracks = gen_data(num_tracks=50000)
+    data_tracks = gen_data(num_tracks=20000)
     world = np.loadtxt('environment.csv', delimiter=',')
 
     dataset = LocalizationDataset(data_tracks)
